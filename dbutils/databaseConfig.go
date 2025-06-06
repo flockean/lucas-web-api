@@ -6,15 +6,16 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"os"
+	"strconv"
 )
 
-// TODO: Put creds in environment
+// default configuration values if environment variables are not set
 const (
-	host     = "0.0.0.0"
-	port     = 5432
-	user     = "postgres"
-	password = "rocket123"
-	dbname   = "projectDb"
+	defaultHost     = "0.0.0.0"
+	defaultPort     = 5432
+	defaultUser     = "postgres"
+	defaultPassword = "rocket123"
+	defaultDBName   = "projectDb"
 )
 
 type DB struct {
@@ -22,7 +23,35 @@ type DB struct {
 }
 
 func ConnectDatabase() (*DB, error) {
-	// TODO: password needs to be... well not visible
+	// read configuration from environment with defaults
+	host := os.Getenv("DB_HOST")
+	if host == "" {
+		host = defaultHost
+	}
+
+	portStr := os.Getenv("DB_PORT")
+	port := defaultPort
+	if portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil {
+			port = p
+		}
+	}
+
+	user := os.Getenv("DB_USER")
+	if user == "" {
+		user = defaultUser
+	}
+
+	password := os.Getenv("DB_PASS")
+	if password == "" {
+		password = defaultPassword
+	}
+
+	dbname := os.Getenv("DB_NAME")
+	if dbname == "" {
+		dbname = defaultDBName
+	}
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 	db, err := sql.Open("postgres", psqlInfo)
 	fmt.Println(psqlInfo)
