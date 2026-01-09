@@ -1,0 +1,396 @@
+basePath: /api
+definitions:
+  dbutils.APIResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dbutils.CreateProjectRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    required:
+    - name
+    type: object
+  dbutils.Project:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - name
+    type: object
+  dbutils.Service:
+    properties:
+      created_at:
+        type: string
+      focus:
+        type: string
+      id:
+        type: integer
+      lang:
+        type: string
+      name:
+        type: string
+      project:
+        type: integer
+      updated_at:
+        type: string
+    required:
+    - name
+    - project
+    type: object
+  dbutils.UpdateProjectRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@lucas-api.com
+    name: API Support
+    url: http://localhost:8080/support
+  description: REST API for project and service management with clean architecture
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://localhost:8080/terms/
+  title: Lucas Web API
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      description: Get general information about the API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API information retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: API Information
+      tags:
+      - system
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Check if the service is healthy and running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is healthy
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: Health check
+      tags:
+      - system
+  /project:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all projects from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Projects retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dbutils.Project'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve projects
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Get all projects
+      tags:
+      - project
+    post:
+      consumes:
+      - application/json
+      description: Create a new project with the provided data
+      parameters:
+      - description: Project data
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/dbutils.CreateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Project created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dbutils.Project'
+              type: object
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "500":
+          description: Failed to create project
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Create new project
+      tags:
+      - project
+  /project/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a project by its ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project deleted successfully
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "400":
+          description: Invalid project ID
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "409":
+          description: Cannot delete project with active services
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "500":
+          description: Failed to delete project
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Delete project
+      tags:
+      - project
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific project by its ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dbutils.Project'
+              type: object
+        "400":
+          description: Invalid project ID
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "500":
+          description: Failed to retrieve project
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Get project by ID
+      tags:
+      - project
+    put:
+      consumes:
+      - application/json
+      description: Update an existing project with the provided data
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated project data
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/dbutils.UpdateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dbutils.Project'
+              type: object
+        "400":
+          description: Invalid project ID or request body
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "500":
+          description: Failed to update project
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Update project
+      tags:
+      - project
+  /project/{id}/services:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all services for a specific project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project services retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dbutils.Service'
+                  type: array
+              type: object
+        "400":
+          description: Invalid project ID
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+        "500":
+          description: Failed to retrieve project services
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Get services by project ID
+      tags:
+      - project
+  /project/stats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all projects with additional statistics like service count
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project statistics retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve project statistics
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Get projects with statistics
+      tags:
+      - project
+  /services:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all services from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Services retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dbutils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dbutils.Service'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve services
+          schema:
+            $ref: '#/definitions/dbutils.APIResponse'
+      summary: Get all services
+      tags:
+      - services
+swagger: "2.0"

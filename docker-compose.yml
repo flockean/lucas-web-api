@@ -3,16 +3,33 @@ services:
   db:
     image: postgres:latest
     environment:
-      POSTGRES_PASSWORD: lucas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rocket123
+      POSTGRES_DB: projectDb
     ports:
-      - 5432:5432
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d projectDb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   webapi:
     build: .
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=rocket123
+      - DB_NAME=projectDb
+      - SERVER_DEBUG=true
 
 volumes:
   postgres_data:
