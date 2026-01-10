@@ -1,7 +1,7 @@
 package database
 
 import (
-	"LucasApi/api/dbutils"
+	"LucasApi/api/models"
 	"database/sql"
 	"fmt"
 	"log"
@@ -19,7 +19,7 @@ func NewProjectRepository(db *DB) *ProjectRepository {
 }
 
 // GetAll retrieves all projects from the database
-func (r *ProjectRepository) GetAll() ([]dbutils.Project, error) {
+func (r *ProjectRepository) GetAll() ([]models.Project, error) {
 	query := `
 		SELECT id, name, description, status, created_at, updated_at 
 		FROM project 
@@ -35,9 +35,9 @@ func (r *ProjectRepository) GetAll() ([]dbutils.Project, error) {
 		}
 	}()
 
-	var projects []dbutils.Project
+	var projects []models.Project
 	for rows.Next() {
-		var project dbutils.Project
+		var project models.Project
 		err := rows.Scan(&project.ID, &project.Name, &project.Description,
 			&project.Status, &project.CreatedAt, &project.UpdatedAt)
 		if err != nil {
@@ -51,7 +51,7 @@ func (r *ProjectRepository) GetAll() ([]dbutils.Project, error) {
 }
 
 // GetByID retrieves a project by its ID
-func (r *ProjectRepository) GetByID(id int) (*dbutils.Project, error) {
+func (r *ProjectRepository) GetByID(id int) (*models.Project, error) {
 	query := `
 		SELECT id, name, description, status, created_at, updated_at 
 		FROM project 
@@ -59,7 +59,7 @@ func (r *ProjectRepository) GetByID(id int) (*dbutils.Project, error) {
 	`
 	row := r.db.QueryRow(query, id)
 
-	var project dbutils.Project
+	var project models.Project
 	err := row.Scan(&project.ID, &project.Name, &project.Description,
 		&project.Status, &project.CreatedAt, &project.UpdatedAt)
 	if err != nil {
@@ -73,7 +73,7 @@ func (r *ProjectRepository) GetByID(id int) (*dbutils.Project, error) {
 }
 
 // Create creates a new project
-func (r *ProjectRepository) Create(req dbutils.CreateProjectRequest) (*dbutils.Project, error) {
+func (r *ProjectRepository) Create(req models.CreateProjectRequest) (*models.Project, error) {
 	// Set default status if not provided
 	if req.Status == "" {
 		req.Status = "active"
@@ -87,7 +87,7 @@ func (r *ProjectRepository) Create(req dbutils.CreateProjectRequest) (*dbutils.P
 	now := time.Now()
 	row := r.db.QueryRow(query, req.Name, req.Description, req.Status, now, now)
 
-	var project dbutils.Project
+	var project models.Project
 	err := row.Scan(&project.ID, &project.Name, &project.Description,
 		&project.Status, &project.CreatedAt, &project.UpdatedAt)
 	if err != nil {
@@ -98,7 +98,7 @@ func (r *ProjectRepository) Create(req dbutils.CreateProjectRequest) (*dbutils.P
 }
 
 // Update updates an existing project
-func (r *ProjectRepository) Update(id int, req dbutils.UpdateProjectRequest) (*dbutils.Project, error) {
+func (r *ProjectRepository) Update(id int, req models.UpdateProjectRequest) (*models.Project, error) {
 	// Check if project exists
 	existingProject, err := r.GetByID(id)
 	if err != nil {
@@ -156,7 +156,7 @@ func (r *ProjectRepository) Update(id int, req dbutils.UpdateProjectRequest) (*d
 
 	row := r.db.QueryRow(query, args...)
 
-	var project dbutils.Project
+	var project models.Project
 	err = row.Scan(&project.ID, &project.Name, &project.Description,
 		&project.Status, &project.CreatedAt, &project.UpdatedAt)
 	if err != nil {
@@ -215,7 +215,7 @@ func (r *ProjectRepository) GetWithStats() ([]map[string]interface{}, error) {
 
 	var results []map[string]interface{}
 	for rows.Next() {
-		var project dbutils.Project
+		var project models.Project
 		var serviceCount int
 
 		err := rows.Scan(&project.ID, &project.Name, &project.Description,
@@ -251,7 +251,7 @@ func NewServiceRepository(db *DB) *ServiceRepository {
 }
 
 // GetByProjectID retrieves all services for a specific project
-func (r *ServiceRepository) GetByProjectID(projectID int) ([]dbutils.Service, error) {
+func (r *ServiceRepository) GetByProjectID(projectID int) ([]models.Service, error) {
 	query := `
 		SELECT id, name, lang, focus, project, created_at, updated_at 
 		FROM service 
@@ -268,9 +268,9 @@ func (r *ServiceRepository) GetByProjectID(projectID int) ([]dbutils.Service, er
 		}
 	}()
 
-	var services []dbutils.Service
+	var services []models.Service
 	for rows.Next() {
-		var service dbutils.Service
+		var service models.Service
 		err := rows.Scan(&service.ID, &service.Name, &service.Lang,
 			&service.Focus, &service.Project, &service.CreatedAt, &service.UpdatedAt)
 		if err != nil {
@@ -284,7 +284,7 @@ func (r *ServiceRepository) GetByProjectID(projectID int) ([]dbutils.Service, er
 }
 
 // GetAll retrieves all services
-func (r *ServiceRepository) GetAll() ([]dbutils.Service, error) {
+func (r *ServiceRepository) GetAll() ([]models.Service, error) {
 	query := `
 		SELECT id, name, lang, focus, project, created_at, updated_at 
 		FROM service 
@@ -300,9 +300,9 @@ func (r *ServiceRepository) GetAll() ([]dbutils.Service, error) {
 		}
 	}()
 
-	var services []dbutils.Service
+	var services []models.Service
 	for rows.Next() {
-		var service dbutils.Service
+		var service models.Service
 		err := rows.Scan(&service.ID, &service.Name, &service.Lang,
 			&service.Focus, &service.Project, &service.CreatedAt, &service.UpdatedAt)
 		if err != nil {

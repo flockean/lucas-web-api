@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS service(
     ON DELETE CASCADE
 );
 
--- Insert sample data
+-- Insert sample data #TODO: Remove someday
 INSERT INTO project (name, description, status) VALUES 
 ('Lucas Web API', 'Main API project for web services', 'active'),
 ('Frontend Dashboard', 'React-based dashboard for project management', 'active'),

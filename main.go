@@ -5,6 +5,7 @@ import (
 	"LucasApi/api/controllers"
 	"LucasApi/api/database"
 	_ "LucasApi/api/docs"
+	"LucasApi/api/middleware"
 	"LucasApi/api/services"
 	"context"
 	"log"
@@ -14,8 +15,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -35,6 +39,11 @@ import (
 // @host localhost:8080
 // @BasePath /api
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: Error loading .env file: %v", err)
+	}
+
 	// Load configuration
 	cfg := config.LoadConfig()
 	if err := cfg.Validate(); err != nil {
@@ -65,9 +74,21 @@ func main() {
 	serviceController := controllers.NewServiceController(serviceService)
 	healthController := controllers.NewHealthController()
 	apiController := controllers.NewAPIController()
+	authController := controllers.NewAuthController()
+
+	// Initialize OAuth2 handler if enabled
+	var oauth2Handler *middleware.OAuth2Handler
+	if cfg.OAuth2.Enabled {
+		var err error
+		oauth2Handler, err = middleware.NewOAuth2Handler(&cfg.OAuth2)
+		if err != nil {
+			log.Fatalf("Failed to initialize OAuth2: %v", err)
+		}
+		log.Printf("OAuth2 enabled with provider: %s", cfg.OAuth2.Provider)
+	}
 
 	// Setup router
-	router := setupRouter(cfg, projectController, serviceController, healthController, apiController)
+	router := setupRouter(cfg, projectController, serviceController, healthController, apiController, authController, oauth2Handler)
 
 	// Create server
 	srv := &http.Server{
@@ -107,7 +128,9 @@ func setupRouter(cfg *config.Config,
 	projectController *controllers.ProjectController,
 	serviceController *controllers.ServiceController,
 	healthController *controllers.HealthController,
-	apiController *controllers.APIController) *gin.Engine {
+	apiController *controllers.APIController,
+	authController *controllers.AuthController,
+	oauth2Handler *middleware.OAuth2Handler) *gin.Engine {
 
 	// Set gin mode
 	if !cfg.Server.Debug {
@@ -115,6 +138,17 @@ func setupRouter(cfg *config.Config,
 	}
 
 	router := gin.Default()
+
+	// Session management
+	store := cookie.NewStore([]byte(cfg.OAuth2.SessionSecret))
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   3600 * 24, // 24 hours
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	})
+	router.Use(sessions.Sessions("lucas-api-session", store))
 
 	// Security middleware
 	router.Use(securityMiddleware())
@@ -138,10 +172,39 @@ func setupRouter(cfg *config.Config,
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// OAuth2 Authentication routes
+	if oauth2Handler != nil {
+		auth := router.Group("/api/auth")
+		{
+			auth.GET("/login", oauth2Handler.LoginHandler())
+			auth.GET("/callback", oauth2Handler.CallbackHandler())
+			auth.POST("/logout", oauth2Handler.LogoutHandler())
+			auth.GET("/me", oauth2Handler.RequireAuth(), oauth2Handler.MeHandler())
+			auth.GET("/login-url", authController.GetLoginURL)
+		}
+	}
+
 	// API routes
 	api := router.Group(cfg.API.Prefix)
+
+	// Add OAuth2 configuration to context for all API routes
+	api.Use(func(c *gin.Context) {
+		c.Set("oauth2_enabled", cfg.OAuth2.Enabled)
+		c.Set("oauth2_provider", cfg.OAuth2.Provider)
+		c.Set("auth_required", cfg.API.EnableAuth)
+		c.Next()
+	})
+
+	// Apply OAuth2 middleware if enabled and auth is required
+	if oauth2Handler != nil && cfg.API.EnableAuth {
+		api.Use(oauth2Handler.RequireAuth())
+	} else if oauth2Handler != nil {
+		// Optional auth - adds user info to context if available
+		api.Use(oauth2Handler.OptionalAuth())
+	}
+
 	{
-		// General API info
+		// General API info (always public)
 		api.GET("", apiController.GetAPIInfo)
 		api.GET("/", apiController.GetAPIInfo)
 
@@ -151,9 +214,19 @@ func setupRouter(cfg *config.Config,
 			project.GET("", projectController.GetAllProjects)
 			project.GET("/stats", projectController.GetProjectsWithStats)
 			project.GET("/:id", projectController.GetProjectByID)
-			project.POST("", projectController.CreateProject)
-			project.PUT("/:id", projectController.UpdateProject)
-			project.DELETE("/:id", projectController.DeleteProject)
+
+			// Protected routes (require auth if enabled)
+			if cfg.API.EnableAuth {
+				project.POST("", projectController.CreateProject)
+				project.PUT("/:id", projectController.UpdateProject)
+				project.DELETE("/:id", projectController.DeleteProject)
+			} else {
+				// If auth is disabled, all routes are public
+				project.POST("", projectController.CreateProject)
+				project.PUT("/:id", projectController.UpdateProject)
+				project.DELETE("/:id", projectController.DeleteProject)
+			}
+
 			project.GET("/:id/services", projectController.GetServicesByProjectID)
 		}
 
@@ -196,7 +269,12 @@ func securityMiddleware() gin.HandlerFunc {
 // CORS middleware
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
+		origin := c.Request.Header.Get("Origin")
+		if origin == "" {
+			origin = "http://localhost:8080" // Default for same-origin requests
+		}
+
+		c.Header("Access-Control-Allow-Origin", origin)
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Header("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")

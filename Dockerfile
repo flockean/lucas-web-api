@@ -1,26 +1,13 @@
-FROM golang:1.23-bookworm as builder
-
+FROM golang:1.25 AS builder
+ARG CGO_ENABLED=0
 WORKDIR /app
 
-COPY . ./
-
+COPY go.mod go.sum ./
 RUN go mod download
+COPY . .
 
 RUN go build
 
-FROM debian:bookworm-slim
-
-RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy the binary to the production image from the builder stage.
-
-COPY --from=builder /app/hello /app/hello
-
-# Run the web service on container startup.
-
-CMD ["/app/hello"]
-
-
-
+FROM scratch
+COPY --from=builder /app/api /api
+ENTRYPOINT ["/api"]

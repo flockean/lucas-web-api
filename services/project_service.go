@@ -2,7 +2,7 @@ package services
 
 import (
 	"LucasApi/api/database"
-	"LucasApi/api/dbutils"
+	"LucasApi/api/models"
 	"fmt"
 	"log"
 )
@@ -22,7 +22,7 @@ func NewProjectService(projectRepo *database.ProjectRepository, serviceRepo *dat
 }
 
 // GetAllProjects retrieves all projects
-func (s *ProjectService) GetAllProjects() ([]dbutils.Project, error) {
+func (s *ProjectService) GetAllProjects() ([]models.Project, error) {
 	log.Println("Service: Getting all projects")
 
 	projects, err := s.projectRepo.GetAll()
@@ -35,7 +35,7 @@ func (s *ProjectService) GetAllProjects() ([]dbutils.Project, error) {
 }
 
 // GetProjectByID retrieves a project by ID
-func (s *ProjectService) GetProjectByID(id int) (*dbutils.Project, error) {
+func (s *ProjectService) GetProjectByID(id int) (*models.Project, error) {
 	log.Printf("Service: Getting project with ID %d", id)
 
 	if id <= 0 {
@@ -52,7 +52,7 @@ func (s *ProjectService) GetProjectByID(id int) (*dbutils.Project, error) {
 }
 
 // CreateProject creates a new project
-func (s *ProjectService) CreateProject(req dbutils.CreateProjectRequest) (*dbutils.Project, error) {
+func (s *ProjectService) CreateProject(req models.CreateProjectRequest) (*models.Project, error) {
 	log.Printf("Service: Creating project '%s'", req.Name)
 
 	// Business logic validation
@@ -70,7 +70,7 @@ func (s *ProjectService) CreateProject(req dbutils.CreateProjectRequest) (*dbuti
 }
 
 // UpdateProject updates an existing project
-func (s *ProjectService) UpdateProject(id int, req dbutils.UpdateProjectRequest) (*dbutils.Project, error) {
+func (s *ProjectService) UpdateProject(id int, req models.UpdateProjectRequest) (*models.Project, error) {
 	log.Printf("Service: Updating project with ID %d", id)
 
 	if id <= 0 {
@@ -132,7 +132,7 @@ func (s *ProjectService) GetProjectsWithStats() ([]map[string]interface{}, error
 }
 
 // GetServicesByProjectID retrieves services for a project
-func (s *ProjectService) GetServicesByProjectID(projectID int) ([]dbutils.Service, error) {
+func (s *ProjectService) GetServicesByProjectID(projectID int) ([]models.Service, error) {
 	log.Printf("Service: Getting services for project ID %d", projectID)
 
 	if projectID <= 0 {
@@ -156,7 +156,7 @@ func (s *ProjectService) GetServicesByProjectID(projectID int) ([]dbutils.Servic
 
 // Business logic validation methods
 
-func (s *ProjectService) validateCreateProjectRequest(req dbutils.CreateProjectRequest) error {
+func (s *ProjectService) validateCreateProjectRequest(req models.CreateProjectRequest) error {
 	if req.Name == "" {
 		return fmt.Errorf("project name is required")
 	}
@@ -185,7 +185,7 @@ func (s *ProjectService) validateCreateProjectRequest(req dbutils.CreateProjectR
 	return nil
 }
 
-func (s *ProjectService) validateUpdateProjectRequest(req dbutils.UpdateProjectRequest) error {
+func (s *ProjectService) validateUpdateProjectRequest(req models.UpdateProjectRequest) error {
 	if req.Name != nil {
 		if *req.Name == "" {
 			return fmt.Errorf("project name cannot be empty")
@@ -229,7 +229,7 @@ func NewServiceService(serviceRepo *database.ServiceRepository, projectRepo *dat
 }
 
 // GetAllServices retrieves all services
-func (s *ServiceService) GetAllServices() ([]dbutils.Service, error) {
+func (s *ServiceService) GetAllServices() ([]models.Service, error) {
 	log.Println("Service: Getting all services")
 
 	services, err := s.serviceRepo.GetAll()

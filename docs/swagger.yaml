@@ -1,6 +1,6 @@
 basePath: /api
 definitions:
-  dbutils.APIResponse:
+  models.APIResponse:
     properties:
       data: {}
       error:
@@ -10,7 +10,7 @@ definitions:
       success:
         type: boolean
     type: object
-  dbutils.CreateProjectRequest:
+  models.CreateProjectRequest:
     properties:
       description:
         type: string
@@ -21,7 +21,7 @@ definitions:
     required:
     - name
     type: object
-  dbutils.Project:
+  models.Project:
     properties:
       created_at:
         type: string
@@ -38,7 +38,7 @@ definitions:
     required:
     - name
     type: object
-  dbutils.Service:
+  models.Service:
     properties:
       created_at:
         type: string
@@ -58,7 +58,7 @@ definitions:
     - name
     - project
     type: object
-  dbutils.UpdateProjectRequest:
+  models.UpdateProjectRequest:
     properties:
       description:
         type: string
@@ -93,7 +93,7 @@ paths:
           description: API information retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
                   additionalProperties: true
@@ -102,6 +102,25 @@ paths:
       summary: API Information
       tags:
       - system
+  /api/auth/login-url:
+    get:
+      description: Returns the OAuth2 login URL with optional redirect parameter
+      parameters:
+      - description: URL to redirect after login
+        in: query
+        name: redirect_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login information
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get login URL
+      tags:
+      - auth
   /health:
     get:
       consumes:
@@ -114,7 +133,7 @@ paths:
           description: Service is healthy
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
                   additionalProperties: true
@@ -135,17 +154,17 @@ paths:
           description: Projects retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dbutils.Project'
+                    $ref: '#/definitions/models.Project'
                   type: array
               type: object
         "500":
           description: Failed to retrieve projects
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Get all projects
       tags:
       - project
@@ -159,7 +178,7 @@ paths:
         name: project
         required: true
         schema:
-          $ref: '#/definitions/dbutils.CreateProjectRequest'
+          $ref: '#/definitions/models.CreateProjectRequest'
       produces:
       - application/json
       responses:
@@ -167,19 +186,19 @@ paths:
           description: Project created successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dbutils.Project'
+                  $ref: '#/definitions/models.Project'
               type: object
         "400":
           description: Invalid request body or validation error
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "500":
           description: Failed to create project
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Create new project
       tags:
       - project
@@ -200,23 +219,23 @@ paths:
         "200":
           description: Project deleted successfully
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "400":
           description: Invalid project ID
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "409":
           description: Cannot delete project with active services
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "500":
           description: Failed to delete project
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Delete project
       tags:
       - project
@@ -237,23 +256,23 @@ paths:
           description: Project retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dbutils.Project'
+                  $ref: '#/definitions/models.Project'
               type: object
         "400":
           description: Invalid project ID
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "500":
           description: Failed to retrieve project
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Get project by ID
       tags:
       - project
@@ -272,7 +291,7 @@ paths:
         name: project
         required: true
         schema:
-          $ref: '#/definitions/dbutils.UpdateProjectRequest'
+          $ref: '#/definitions/models.UpdateProjectRequest'
       produces:
       - application/json
       responses:
@@ -280,23 +299,23 @@ paths:
           description: Project updated successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dbutils.Project'
+                  $ref: '#/definitions/models.Project'
               type: object
         "400":
           description: Invalid project ID or request body
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "500":
           description: Failed to update project
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Update project
       tags:
       - project
@@ -318,25 +337,25 @@ paths:
           description: Project services retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dbutils.Service'
+                    $ref: '#/definitions/models.Service'
                   type: array
               type: object
         "400":
           description: Invalid project ID
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
         "500":
           description: Failed to retrieve project services
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Get services by project ID
       tags:
       - project
@@ -352,7 +371,7 @@ paths:
           description: Project statistics retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
                   items:
@@ -363,7 +382,7 @@ paths:
         "500":
           description: Failed to retrieve project statistics
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Get projects with statistics
       tags:
       - project
@@ -379,17 +398,17 @@ paths:
           description: Services retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/dbutils.APIResponse'
+            - $ref: '#/definitions/models.APIResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dbutils.Service'
+                    $ref: '#/definitions/models.Service'
                   type: array
               type: object
         "500":
           description: Failed to retrieve services
           schema:
-            $ref: '#/definitions/dbutils.APIResponse'
+            $ref: '#/definitions/models.APIResponse'
       summary: Get all services
       tags:
       - services

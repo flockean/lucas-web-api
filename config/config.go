@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig `json:"database"`
 	API      APIConfig      `json:"api"`
 	Client   ClientConfig   `json:"client"`
+	OAuth2   OAuth2Config   `json:"oauth2"`
 }
 
 // ServerConfig holds server-specific configuration
@@ -60,6 +62,20 @@ type ClientConfig struct {
 	UserAgent     string        `json:"user_agent"`
 }
 
+// OAuth2Config holds OAuth2-specific configuration
+type OAuth2Config struct {
+	Enabled       bool     `json:"enabled"`
+	Provider      string   `json:"provider"` // "google", "github", etc. #TODO: just github for now
+	ClientID      string   `json:"client_id"`
+	ClientSecret  string   `json:"client_secret"`
+	RedirectURL   string   `json:"redirect_url"`
+	Scopes        []string `json:"scopes"`
+	AuthURL       string   `json:"auth_url"`
+	TokenURL      string   `json:"token_url"`
+	UserInfoURL   string   `json:"user_info_url"`
+	SessionSecret string   `json:"session_secret"`
+}
+
 // LoadConfig loads configuration from environment variables with defaults
 func LoadConfig() *Config {
 	return &Config{
@@ -99,6 +115,19 @@ func LoadConfig() *Config {
 			RetryWaitTime: getDurationEnvOrDefault("CLIENT_RETRY_WAIT_TIME", 2*time.Second),
 			Debug:         getBoolEnvOrDefault("CLIENT_DEBUG", false),
 			UserAgent:     getEnvOrDefault("CLIENT_USER_AGENT", "Lucas-API-Client/1.0"),
+		},
+		// TODO: remove unused google oauth2 settings
+		OAuth2: OAuth2Config{
+			Enabled:       getBoolEnvOrDefault("OAUTH2_ENABLED", false),
+			Provider:      getEnvOrDefault("OAUTH2_PROVIDER", "github"),
+			ClientID:      getEnvOrDefault("OAUTH2_CLIENT_ID", ""),
+			ClientSecret:  getEnvOrDefault("OAUTH2_CLIENT_SECRET", ""),
+			RedirectURL:   getEnvOrDefault("OAUTH2_REDIRECT_URL", "http://localhost:8080/api/auth/callback"),
+			Scopes:        getStringSliceEnvOrDefault("OAUTH2_SCOPES", []string{"openid", "profile", "email"}),
+			AuthURL:       getEnvOrDefault("OAUTH2_AUTH_URL", "https://accounts.google.com/o/oauth2/auth"),
+			TokenURL:      getEnvOrDefault("OAUTH2_TOKEN_URL", "https://oauth2.googleapis.com/token"),
+			UserInfoURL:   getEnvOrDefault("OAUTH2_USER_INFO_URL", "https://www.googleapis.com/oauth2/v2/userinfo"),
+			SessionSecret: getEnvOrDefault("OAUTH2_SESSION_SECRET", "your-session-secret-key"),
 		},
 	}
 }
@@ -145,6 +174,18 @@ func getDurationEnvOrDefault(key string, defaultValue time.Duration) time.Durati
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
 		}
+	}
+	return defaultValue
+}
+
+func getStringSliceEnvOrDefault(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		// Split by comma and trim whitespace
+		var result []string
+		for _, item := range strings.Split(value, ",") {
+			result = append(result, strings.TrimSpace(item))
+		}
+		return result
 	}
 	return defaultValue
 }

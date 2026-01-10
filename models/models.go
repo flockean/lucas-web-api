@@ -1,4 +1,4 @@
-package dbutils
+package models
 
 import (
 	"time"
@@ -40,4 +40,12 @@ type APIResponse struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
+}
+
+type UserInfo struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Picture  string `json:"picture"`
+	Provider string `json:"provider"`
 }

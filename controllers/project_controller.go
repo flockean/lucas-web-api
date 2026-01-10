@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"LucasApi/api/dbutils"
+	"LucasApi/api/models"
 	"LucasApi/api/services"
 	"net/http"
 	"strconv"
@@ -27,13 +27,13 @@ func NewProjectController(projectService *services.ProjectService) *ProjectContr
 // @Tags project
 // @Accept json
 // @Produce json
-// @Success 200 {object} dbutils.APIResponse{data=[]dbutils.Project} "Projects retrieved successfully"
-// @Failure 500 {object} dbutils.APIResponse "Failed to retrieve projects"
+// @Success 200 {object} models.APIResponse{data=[]models.Project} "Projects retrieved successfully"
+// @Failure 500 {object} models.APIResponse "Failed to retrieve projects"
 // @Router /project [get]
 func (c *ProjectController) GetAllProjects(ctx *gin.Context) {
 	projects, err := c.projectService.GetAllProjects()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, dbutils.APIResponse{
+		ctx.JSON(http.StatusInternalServerError, models.APIResponse{
 			Success: false,
 			Message: "Failed to retrieve projects",
 			Error:   err.Error(),
@@ -41,7 +41,7 @@ func (c *ProjectController) GetAllProjects(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dbutils.APIResponse{
+	ctx.JSON(http.StatusOK, models.APIResponse{
 		Success: true,
 		Message: "Projects retrieved successfully",
 		Data:    projects,
@@ -55,16 +55,16 @@ func (c *ProjectController) GetAllProjects(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Project ID"
-// @Success 200 {object} dbutils.APIResponse{data=dbutils.Project} "Project retrieved successfully"
-// @Failure 400 {object} dbutils.APIResponse "Invalid project ID"
-// @Failure 404 {object} dbutils.APIResponse "Project not found"
-// @Failure 500 {object} dbutils.APIResponse "Failed to retrieve project"
+// @Success 200 {object} models.APIResponse{data=models.Project} "Project retrieved successfully"
+// @Failure 400 {object} models.APIResponse "Invalid project ID"
+// @Failure 404 {object} models.APIResponse "Project not found"
+// @Failure 500 {object} models.APIResponse "Failed to retrieve project"
 // @Router /project/{id} [get]
 func (c *ProjectController) GetProjectByID(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, dbutils.APIResponse{
+		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid project ID",
 			Error:   "ID must be a number",
@@ -79,7 +79,7 @@ func (c *ProjectController) GetProjectByID(ctx *gin.Context) {
 			status = http.StatusNotFound
 		}
 
-		ctx.JSON(status, dbutils.APIResponse{
+		ctx.JSON(status, models.APIResponse{
 			Success: false,
 			Message: "Failed to retrieve project",
 			Error:   err.Error(),
@@ -87,7 +87,7 @@ func (c *ProjectController) GetProjectByID(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dbutils.APIResponse{
+	ctx.JSON(http.StatusOK, models.APIResponse{
 		Success: true,
 		Message: "Project retrieved successfully",
 		Data:    project,
@@ -100,15 +100,15 @@ func (c *ProjectController) GetProjectByID(ctx *gin.Context) {
 // @Tags project
 // @Accept json
 // @Produce json
-// @Param project body dbutils.CreateProjectRequest true "Project data"
-// @Success 201 {object} dbutils.APIResponse{data=dbutils.Project} "Project created successfully"
-// @Failure 400 {object} dbutils.APIResponse "Invalid request body or validation error"
-// @Failure 500 {object} dbutils.APIResponse "Failed to create project"
+// @Param project body models.CreateProjectRequest true "Project data"
+// @Success 201 {object} models.APIResponse{data=models.Project} "Project created successfully"
+// @Failure 400 {object} models.APIResponse "Invalid request body or validation error"
+// @Failure 500 {object} models.APIResponse "Failed to create project"
 // @Router /project [post]
 func (c *ProjectController) CreateProject(ctx *gin.Context) {
-	var req dbutils.CreateProjectRequest
+	var req models.CreateProjectRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, dbutils.APIResponse{
+		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid request body",
 			Error:   err.Error(),
@@ -125,7 +125,7 @@ func (c *ProjectController) CreateProject(ctx *gin.Context) {
 			status = http.StatusBadRequest
 		}
 
-		ctx.JSON(status, dbutils.APIResponse{
+		ctx.JSON(status, models.APIResponse{
 			Success: false,
 			Message: "Failed to create project",
 			Error:   err.Error(),
@@ -133,7 +133,7 @@ func (c *ProjectController) CreateProject(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, dbutils.APIResponse{
+	ctx.JSON(http.StatusCreated, models.APIResponse{
 		Success: true,
 		Message: "Project created successfully",
 		Data:    project,
@@ -147,17 +147,17 @@ func (c *ProjectController) CreateProject(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Project ID"
-// @Param project body dbutils.UpdateProjectRequest true "Updated project data"
-// @Success 200 {object} dbutils.APIResponse{data=dbutils.Project} "Project updated successfully"
-// @Failure 400 {object} dbutils.APIResponse "Invalid project ID or request body"
-// @Failure 404 {object} dbutils.APIResponse "Project not found"
-// @Failure 500 {object} dbutils.APIResponse "Failed to update project"
+// @Param project body models.UpdateProjectRequest true "Updated project data"
+// @Success 200 {object} models.APIResponse{data=models.Project} "Project updated successfully"
+// @Failure 400 {object} models.APIResponse "Invalid project ID or request body"
+// @Failure 404 {object} models.APIResponse "Project not found"
+// @Failure 500 {object} models.APIResponse "Failed to update project"
 // @Router /project/{id} [put]
 func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, dbutils.APIResponse{
+		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid project ID",
 			Error:   "ID must be a number",
@@ -165,9 +165,9 @@ func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 		return
 	}
 
-	var req dbutils.UpdateProjectRequest
+	var req models.UpdateProjectRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, dbutils.APIResponse{
+		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid request body",
 			Error:   err.Error(),
@@ -184,7 +184,7 @@ func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 			status = http.StatusBadRequest
 		}
 
-		ctx.JSON(status, dbutils.APIResponse{
+		ctx.JSON(status, models.APIResponse{
 			Success: false,
 			Message: "Failed to update project",
 			Error:   err.Error(),
@@ -192,7 +192,7 @@ func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dbutils.APIResponse{
+	ctx.JSON(http.StatusOK, models.APIResponse{
 		Success: true,
 		Message: "Project updated successfully",
 		Data:    project,
@@ -206,17 +206,17 @@ func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Project ID"
-// @Success 200 {object} dbutils.APIResponse "Project deleted successfully"
-// @Failure 400 {object} dbutils.APIResponse "Invalid project ID"
-// @Failure 404 {object} dbutils.APIResponse "Project not found"
-// @Failure 409 {object} dbutils.APIResponse "Cannot delete project with active services"
-// @Failure 500 {object} dbutils.APIResponse "Failed to delete project"
+// @Success 200 {object} models.APIResponse "Project deleted successfully"
+// @Failure 400 {object} models.APIResponse "Invalid project ID"
+// @Failure 404 {object} models.APIResponse "Project not found"
+// @Failure 409 {object} models.APIResponse "Cannot delete project with active services"
+// @Failure 500 {object} models.APIResponse "Failed to delete project"
 // @Router /project/{id} [delete]
 func (c *ProjectController) DeleteProject(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, dbutils.APIResponse{
+		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid project ID",
 			Error:   "ID must be a number",
@@ -235,7 +235,7 @@ func (c *ProjectController) DeleteProject(ctx *gin.Context) {
 			status = http.StatusConflict
 		}
 
-		ctx.JSON(status, dbutils.APIResponse{
+		ctx.JSON(status, models.APIResponse{
 			Success: false,
 			Message: "Failed to delete project",
 			Error:   err.Error(),
@@ -243,7 +243,7 @@ func (c *ProjectController) DeleteProject(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dbutils.APIResponse{
+	ctx.JSON(http.StatusOK, models.APIResponse{
 		Success: true,
 		Message: "Project deleted successfully",
 	})
@@ -255,13 +255,13 @@ func (c *ProjectController) DeleteProject(ctx *gin.Context) {
 // @Tags project
 // @Accept json
 // @Produce json
-// @Success 200 {object} dbutils.APIResponse{data=[]map[string]interface{}} "Project statistics retrieved successfully"
-// @Failure 500 {object} dbutils.APIResponse "Failed to retrieve project statistics"
+// @Success 200 {object} models.APIResponse{data=[]map[string]interface{}} "Project statistics retrieved successfully"
+// @Failure 500 {object} models.APIResponse "Failed to retrieve project statistics"
 // @Router /project/stats [get]
 func (c *ProjectController) GetProjectsWithStats(ctx *gin.Context) {
 	stats, err := c.projectService.GetProjectsWithStats()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, dbutils.APIResponse{
+		ctx.JSON(http.StatusInternalServerError, models.APIResponse{
 			Success: false,
 			Message: "Failed to retrieve project statistics",
 			Error:   err.Error(),
@@ -269,7 +269,7 @@ func (c *ProjectController) GetProjectsWithStats(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dbutils.APIResponse{
+	ctx.JSON(http.StatusOK, models.APIResponse{
 		Success: true,
 		Message: "Project statistics retrieved successfully",
 		Data:    stats,
@@ -283,16 +283,16 @@ func (c *ProjectController) GetProjectsWithStats(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Project ID"
-// @Success 200 {object} dbutils.APIResponse{data=[]dbutils.Service} "Project services retrieved successfully"
-// @Failure 400 {object} dbutils.APIResponse "Invalid project ID"
-// @Failure 404 {object} dbutils.APIResponse "Project not found"
-// @Failure 500 {object} dbutils.APIResponse "Failed to retrieve project services"
+// @Success 200 {object} models.APIResponse{data=[]models.Service} "Project services retrieved successfully"
+// @Failure 400 {object} models.APIResponse "Invalid project ID"
+// @Failure 404 {object} models.APIResponse "Project not found"
+// @Failure 500 {object} models.APIResponse "Failed to retrieve project services"
 // @Router /project/{id}/services [get]
 func (c *ProjectController) GetServicesByProjectID(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, dbutils.APIResponse{
+		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid project ID",
 			Error:   "ID must be a number",
@@ -307,7 +307,7 @@ func (c *ProjectController) GetServicesByProjectID(ctx *gin.Context) {
 			status = http.StatusNotFound
 		}
 
-		ctx.JSON(status, dbutils.APIResponse{
+		ctx.JSON(status, models.APIResponse{
 			Success: false,
 			Message: "Failed to retrieve project services",
 			Error:   err.Error(),
@@ -315,7 +315,7 @@ func (c *ProjectController) GetServicesByProjectID(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dbutils.APIResponse{
+	ctx.JSON(http.StatusOK, models.APIResponse{
 		Success: true,
 		Message: "Project services retrieved successfully",
 		Data:    services,

@@ -43,7 +43,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -55,6 +55,35 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login-url": {
+            "get": {
+                "description": "Returns the OAuth2 login URL with optional redirect parameter",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get login URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL to redirect after login",
+                        "name": "redirect_to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login information",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -79,7 +108,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -115,7 +144,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -123,7 +152,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dbutils.Project"
+                                                "$ref": "#/definitions/models.Project"
                                             }
                                         }
                                     }
@@ -134,7 +163,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Failed to retrieve projects",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -158,7 +187,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dbutils.CreateProjectRequest"
+                            "$ref": "#/definitions/models.CreateProjectRequest"
                         }
                     }
                 ],
@@ -168,13 +197,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dbutils.Project"
+                                            "$ref": "#/definitions/models.Project"
                                         }
                                     }
                                 }
@@ -184,13 +213,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request body or validation error",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to create project",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -215,7 +244,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -235,7 +264,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Failed to retrieve project statistics",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -269,13 +298,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dbutils.Project"
+                                            "$ref": "#/definitions/models.Project"
                                         }
                                     }
                                 }
@@ -285,19 +314,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid project ID",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Project not found",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to retrieve project",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -328,7 +357,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dbutils.UpdateProjectRequest"
+                            "$ref": "#/definitions/models.UpdateProjectRequest"
                         }
                     }
                 ],
@@ -338,13 +367,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dbutils.Project"
+                                            "$ref": "#/definitions/models.Project"
                                         }
                                     }
                                 }
@@ -354,19 +383,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid project ID or request body",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Project not found",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to update project",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -396,31 +425,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Project deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid project ID",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Project not found",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "409": {
                         "description": "Cannot delete project with active services",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to delete project",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -454,7 +483,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -462,7 +491,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dbutils.Service"
+                                                "$ref": "#/definitions/models.Service"
                                             }
                                         }
                                     }
@@ -473,19 +502,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid project ID",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Project not found",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to retrieve project services",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -510,7 +539,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dbutils.APIResponse"
+                                    "$ref": "#/definitions/models.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -518,7 +547,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dbutils.Service"
+                                                "$ref": "#/definitions/models.Service"
                                             }
                                         }
                                     }
@@ -529,7 +558,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Failed to retrieve services",
                         "schema": {
-                            "$ref": "#/definitions/dbutils.APIResponse"
+                            "$ref": "#/definitions/models.APIResponse"
                         }
                     }
                 }
@@ -537,7 +566,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dbutils.APIResponse": {
+        "models.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -552,7 +581,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dbutils.CreateProjectRequest": {
+        "models.CreateProjectRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -569,7 +598,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dbutils.Project": {
+        "models.Project": {
             "type": "object",
             "required": [
                 "name"
@@ -595,7 +624,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dbutils.Service": {
+        "models.Service": {
             "type": "object",
             "required": [
                 "name",
@@ -625,7 +654,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dbutils.UpdateProjectRequest": {
+        "models.UpdateProjectRequest": {
             "type": "object",
             "properties": {
                 "description": {

@@ -3,7 +3,7 @@ package clients_test
 import (
 	"LucasApi/api/clients"
 	"LucasApi/api/config"
-	"LucasApi/api/dbutils"
+	"LucasApi/api/models"
 	"testing"
 	"time"
 )
@@ -65,7 +65,7 @@ func ExampleClientGenerator() {
 	projectsClient := clients.NewProjectsClient(&cfg.Client)
 
 	// Create a new project
-	newProject := dbutils.CreateProjectRequest{
+	newProject := models.CreateProjectRequest{
 		Name:        "My New Project",
 		Description: stringPtr("A project created via REST client"),
 		Status:      "active",

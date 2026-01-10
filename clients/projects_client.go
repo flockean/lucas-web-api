@@ -2,7 +2,7 @@ package clients
 
 import (
 	"LucasApi/api/config"
-	"LucasApi/api/dbutils"
+	"LucasApi/api/models"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
@@ -39,8 +39,8 @@ func NewProjectsClient(cfg *config.ClientConfig) *ProjectsClient {
 }
 
 // GetAllProjects retrieves all projects
-func (pc *ProjectsClient) GetAllProjects() ([]dbutils.Project, error) {
-	var response dbutils.APIResponse
+func (pc *ProjectsClient) GetAllProjects() ([]models.Project, error) {
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetResult(&response).
@@ -59,8 +59,8 @@ func (pc *ProjectsClient) GetAllProjects() ([]dbutils.Project, error) {
 		return nil, fmt.Errorf("API returned error: %s", response.Message)
 	}
 
-	// Convert response.Data to []dbutils.Project
-	projects, ok := response.Data.([]dbutils.Project)
+	// Convert response.Data to []models.Project
+	projects, ok := response.Data.([]models.Project)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response format")
 	}
@@ -69,8 +69,8 @@ func (pc *ProjectsClient) GetAllProjects() ([]dbutils.Project, error) {
 }
 
 // GetProjectByID retrieves a project by ID
-func (pc *ProjectsClient) GetProjectByID(id int) (*dbutils.Project, error) {
-	var response dbutils.APIResponse
+func (pc *ProjectsClient) GetProjectByID(id int) (*models.Project, error) {
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetResult(&response).
@@ -89,8 +89,8 @@ func (pc *ProjectsClient) GetProjectByID(id int) (*dbutils.Project, error) {
 		return nil, fmt.Errorf("API returned error: %s", response.Message)
 	}
 
-	// Convert response.Data to *dbutils.Project
-	project, ok := response.Data.(*dbutils.Project)
+	// Convert response.Data to *models.Project
+	project, ok := response.Data.(*models.Project)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response format")
 	}
@@ -99,8 +99,8 @@ func (pc *ProjectsClient) GetProjectByID(id int) (*dbutils.Project, error) {
 }
 
 // CreateProject creates a new project
-func (pc *ProjectsClient) CreateProject(req dbutils.CreateProjectRequest) (*dbutils.Project, error) {
-	var response dbutils.APIResponse
+func (pc *ProjectsClient) CreateProject(req models.CreateProjectRequest) (*models.Project, error) {
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetBody(req).
@@ -120,8 +120,8 @@ func (pc *ProjectsClient) CreateProject(req dbutils.CreateProjectRequest) (*dbut
 		return nil, fmt.Errorf("API returned error: %s", response.Message)
 	}
 
-	// Convert response.Data to *dbutils.Project
-	project, ok := response.Data.(*dbutils.Project)
+	// Convert response.Data to *models.Project
+	project, ok := response.Data.(*models.Project)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response format")
 	}
@@ -130,8 +130,8 @@ func (pc *ProjectsClient) CreateProject(req dbutils.CreateProjectRequest) (*dbut
 }
 
 // UpdateProject updates an existing project
-func (pc *ProjectsClient) UpdateProject(id int, req dbutils.UpdateProjectRequest) (*dbutils.Project, error) {
-	var response dbutils.APIResponse
+func (pc *ProjectsClient) UpdateProject(id int, req models.UpdateProjectRequest) (*models.Project, error) {
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetBody(req).
@@ -151,8 +151,8 @@ func (pc *ProjectsClient) UpdateProject(id int, req dbutils.UpdateProjectRequest
 		return nil, fmt.Errorf("API returned error: %s", response.Message)
 	}
 
-	// Convert response.Data to *dbutils.Project
-	project, ok := response.Data.(*dbutils.Project)
+	// Convert response.Data to *models.Project
+	project, ok := response.Data.(*models.Project)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response format")
 	}
@@ -162,7 +162,7 @@ func (pc *ProjectsClient) UpdateProject(id int, req dbutils.UpdateProjectRequest
 
 // DeleteProject deletes a project by ID
 func (pc *ProjectsClient) DeleteProject(id int) error {
-	var response dbutils.APIResponse
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetResult(&response).
@@ -186,7 +186,7 @@ func (pc *ProjectsClient) DeleteProject(id int) error {
 
 // GetProjectsWithStats retrieves projects with statistics
 func (pc *ProjectsClient) GetProjectsWithStats() ([]map[string]interface{}, error) {
-	var response dbutils.APIResponse
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetResult(&response).
@@ -215,8 +215,8 @@ func (pc *ProjectsClient) GetProjectsWithStats() ([]map[string]interface{}, erro
 }
 
 // GetServicesByProjectID retrieves services for a specific project
-func (pc *ProjectsClient) GetServicesByProjectID(projectID int) ([]dbutils.Service, error) {
-	var response dbutils.APIResponse
+func (pc *ProjectsClient) GetServicesByProjectID(projectID int) ([]models.Service, error) {
+	var response models.APIResponse
 
 	resp, err := pc.client.R().
 		SetResult(&response).
@@ -235,8 +235,8 @@ func (pc *ProjectsClient) GetServicesByProjectID(projectID int) ([]dbutils.Servi
 		return nil, fmt.Errorf("API returned error: %s", response.Message)
 	}
 
-	// Convert response.Data to []dbutils.Service
-	services, ok := response.Data.([]dbutils.Service)
+	// Convert response.Data to []models.Service
+	services, ok := response.Data.([]models.Service)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response format")
 	}
