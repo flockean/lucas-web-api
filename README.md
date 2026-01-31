@@ -1,159 +1,133 @@
 # Lucas Web API
 
-A REST API built with Go and Gin framework featuring OAuth2 authentication and PostgreSQL database.
+A REST API for project and service management built with Go, featuring OAuth2 authentication and PostgreSQL database.
 
 ## Features
 
-- RESTful API with Gin framework
-- OAuth2 authentication (GitHub, Google, Azure)
-- PostgreSQL database integration
+- RESTful API with full CRUD operations
+- OAuth2 authentication (GitHub/Google)
+- PostgreSQL with automatic migrations
 - Session-based authentication
-- Swagger documentation
-- Docker containerization
-- CORS support
+- Swagger API documentation
+- Public read endpoints, authenticated write operations
 
 ## Quick Start
 
-### Prerequisites
-
-- Go 1.24+
-- PostgreSQL
-- Docker (optional)
-
-### Installation
-
-1. Clone the repository
+1. **Clone and configure**
 ```bash
 git clone <repository-url>
 cd lucas-web-api
-```
-
-2. Copy environment file
-```bash
 cp .env.example .env
 ```
 
-3. Configure OAuth2 credentials in `.env`
+2. **Configure environment variables** (see Configuration section below)
+
+3. **Start the application**
 ```bash
-OAUTH2_ENABLED=true
-OAUTH2_PROVIDER=github
-OAUTH2_CLIENT_ID=your_client_id
-OAUTH2_CLIENT_SECRET=your_client_secret
+docker compose up -d
 ```
 
-4. Start with Docker
-```bash
-docker-compose up -d
-```
+The API will be available at `http://localhost:8080`
 
-Or run locally:
-```bash
-go run .
-```
+**API Documentation:** http://localhost:8080/swagger/index.html
 
 ## API Endpoints
 
-### Authentication
-- `GET /api/auth/login` - OAuth2 login
-- `GET /api/auth/callback` - OAuth2 callback
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/login-url` - Get login URL
-
-### Projects
+### Public Endpoints (No Authentication Required)
 - `GET /api/project` - List all projects
-- `POST /api/project` - Create project (authenticated)
-- `GET /api/project/{id}` - Get project by ID
-- `PUT /api/project/{id}` - Update project (authenticated)
-- `DELETE /api/project/{id}` - Delete project (authenticated)
+- `GET /api/project/stats` - Get project statistics
+- `GET /api/project/:id` - Get project by ID
+- `GET /api/project/:id/services` - Get services for a project
+- `GET /api/services` - List all services
+- `GET /api/services/:id` - Get service by ID
 
-### Services
-- `GET /api/service` - List all services
-- `GET /api/service/project/{id}` - List services by project
+### Authenticated Endpoints (OAuth2 Required)
+- `POST /api/project` - Create project
+- `PUT /api/project/:id` - Update project
+- `DELETE /api/project/:id` - Delete project
+- `POST /api/services` - Create service
+- `PUT /api/services/:id` - Update service
+- `DELETE /api/services/:id` - Delete service
 
-### Documentation
-- `GET /swagger/index.html` - Swagger UI
-- `GET /docs/index.html` - Alternative docs endpoint
+### Authentication Endpoints
+- `GET /api/auth/login` - Start OAuth2 login flow
+- `GET /api/auth/callback` - OAuth2 callback handler
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/status` - Check authentication status
+- `GET /api/auth/me` - Get current user info
 
 ## Configuration
 
-Environment variables:
+Create a `.env` file with these variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OAUTH2_ENABLED` | Enable OAuth2 authentication | `false` |
-| `OAUTH2_PROVIDER` | OAuth2 provider (github/google/azure) | `github` |
-| `OAUTH2_CLIENT_ID` | OAuth2 client ID | - |
-| `OAUTH2_CLIENT_SECRET` | OAuth2 client secret | - |
-| `OAUTH2_REDIRECT_URL` | OAuth2 redirect URL | `http://localhost:8080/api/auth/callback` |
-| `API_ENABLE_AUTH` | Require auth for write operations | `true` |
-| `DB_HOST` | Database host | `localhost` |
-| `DB_PORT` | Database port | `5432` |
-| `DB_NAME` | Database name | `lucas_api` |
-| `DB_USER` | Database user | `postgres` |
-| `DB_PASSWORD` | Database password | - |
+```bash
+# Server
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8080
+SERVER_DEBUG=true
+
+# Database
+DB_HOST=db
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=rocket123
+DB_NAME=projectDb
+
+# OAuth2 (optional - enables authentication)
+OAUTH2_ENABLED=true
+OAUTH2_PROVIDER=github
+OAUTH2_CLIENT_ID=your_client_id_here
+OAUTH2_CLIENT_SECRET=your_client_secret_here
+OAUTH2_REDIRECT_URL=http://localhost:8080/api/auth/callback
+OAUTH2_SESSION_SECRET=your_random_secret_key
+
+# API Settings
+API_ENABLE_AUTH=true
+API_ENABLE_CORS=true
+```
 
 ## OAuth2 Setup
 
-### GitHub
-1. Go to GitHub Settings > Developer settings > OAuth Apps
-2. Create new OAuth App
-3. Set Authorization callback URL: `http://localhost:8080/api/auth/callback`
-4. Copy Client ID and Client Secret to `.env`
+### GitHub OAuth App
+1. Go to [GitHub Settings > Developer settings > OAuth Apps](https://github.com/settings/developers)
+2. Click "New OAuth App"
+3. Fill in:
+   - **Application name:** Lucas Web API
+   - **Homepage URL:** `http://localhost:8080`
+   - **Authorization callback URL:** `http://localhost:8080/api/auth/callback`
+4. Copy the **Client ID** and generate a **Client Secret**
+5. Add them to your `.env` file
 
-### Google
-1. Go to Google Cloud Console
-2. Create OAuth 2.0 credentials
-3. Add authorized redirect URI: `http://localhost:8080/api/auth/callback`
-4. Copy credentials to `.env`
+### Google OAuth
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Navigate to APIs & Services > Credentials
+4. Create OAuth 2.0 Client ID
+5. Add authorized redirect URI: `http://localhost:8080/api/auth/callback`
+6. Copy credentials to `.env` and set `OAUTH2_PROVIDER=google`
 
-## Development
+## Database Migrations
 
-### Generate Swagger docs
+Migrations run automatically on startup. Migration files are located in `db/migrations/`.
 
-Note: Might not without config, because because of binary from go
+To create a new migration:
 ```bash
-swag init
+# Create migration files (replace 000004 with next version number)
+touch db/migrations/000004_description.up.sql
+touch db/migrations/000004_description.down.sql
 ```
 
-### Run tests
+## Running Locally Without Docker
+
 ```bash
-go test ./...
-```
+# Start PostgreSQL
+docker compose up -d db
 
-### Lint code
-```bash
-golangci-lint run
-```
+# Install dependencies
+go mod download
 
-## Docker
-
-### Build image
-```bash
-docker build -t lucas-web-api .
-```
-
-### Run with docker-compose
-```bash
-docker-compose up -d
-```
-
-## Project Structure
-
-```
-.
-├── clients/          # API clients
-├── config/           # Configuration management
-├── controllers/      # HTTP handlers
-├── database/         # Database layer
-├── db/              # Database migrations
-├── docs/            # Swagger documentation
-├── middleware/      # HTTP middleware
-├── models/          # Data models
-├── services/        # Business logic
-├── docker-compose.yml
-├── Dockerfile
-├── go.mod
-└── main.go
+# Run the application
+go run main.go
 ```
 
 ## License

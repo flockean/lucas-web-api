@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d projectDb"]
       interval: 5s
@@ -30,6 +30,8 @@ services:
       - DB_PASSWORD=rocket123
       - DB_NAME=projectDb
       - SERVER_DEBUG=true
+    env_file:
+      - .env
 
 volumes:
   postgres_data:

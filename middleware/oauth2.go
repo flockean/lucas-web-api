@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -62,7 +63,7 @@ func NewOAuth2Handler(cfg *config.OAuth2Config) (*OAuth2Handler, error) {
 		cfg.UserInfoURL = "https://api.github.com/user"
 		// GitHub doesn't use "openid" scope, use specific GitHub scopes
 		if len(cfg.Scopes) == 0 || containsScope(cfg.Scopes, "openid") {
-			cfg.Scopes = []string{"read:user"}
+			cfg.Scopes = []string{"read:user", "user:email"}
 		}
 	default:
 		// Use custom endpoints
@@ -203,14 +204,28 @@ func (h *OAuth2Handler) CallbackHandler() gin.HandlerFunc {
 			fmt.Printf("DEBUG: Session saved successfully with user: %+v\n", userInfo)
 		}
 
-		// Redirect to original destination or default
+		// Check if this is an API request (JSON expected) vs browser request (redirect expected)
+		acceptHeader := c.GetHeader("Accept")
+		isAPIRequest := strings.Contains(acceptHeader, "application/json") || c.Query("format") == "json"
+
 		redirectTo := session.Get("redirect_after_login")
 		if redirectTo != nil {
 			session.Delete("redirect_after_login")
 			if err := session.Save(); err != nil {
 				log.Printf("Error clearing redirect URL: %v", err)
 			}
-			c.Redirect(http.StatusTemporaryRedirect, redirectTo.(string))
+
+			if isAPIRequest {
+				// For API requests, return JSON with redirect URL
+				c.JSON(http.StatusOK, gin.H{
+					"message":     "Login successful",
+					"user":        userInfo,
+					"redirect_to": redirectTo.(string),
+				})
+			} else {
+				// For browser requests, redirect as before
+				c.Redirect(http.StatusTemporaryRedirect, redirectTo.(string))
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{
 				"message": "Login successful",
@@ -292,14 +307,69 @@ func (h *OAuth2Handler) getUserInfo(token *oauth2.Token) (*models.UserInfo, erro
 		if userInfo.Name == "" {
 			userInfo.Name = getStringFromMap(rawUserInfo, "login") // Fallback to login name
 		}
+		userInfo.Email = getStringFromMap(rawUserInfo, "email")
+		// GitHub may not return email in the user endpoint if it's private
+		// Fetch emails separately if not present
+		if userInfo.Email == "" {
+			if email := h.getGitHubPrimaryEmail(client); email != "" {
+				userInfo.Email = email
+			}
+		}
 		userInfo.Picture = getStringFromMap(rawUserInfo, "avatar_url")
 	default:
 		// Generic mapping for custom providers
 		userInfo.ID = getStringFromMap(rawUserInfo, "id")
 		userInfo.Name = getStringFromMap(rawUserInfo, "name")
+		userInfo.Email = getStringFromMap(rawUserInfo, "email")
+		userInfo.Picture = getStringFromMap(rawUserInfo, "picture")
 	}
 
 	return userInfo, nil
+}
+
+// getGitHubPrimaryEmail fetches the primary email from GitHub's emails API
+func (h *OAuth2Handler) getGitHubPrimaryEmail(client *http.Client) string {
+	resp, err := client.Get("https://api.github.com/user/emails")
+	if err != nil {
+		log.Printf("Failed to fetch GitHub emails: %v", err)
+		return ""
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Error closing response body: %v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Failed to fetch GitHub emails, status: %d", resp.StatusCode)
+		return ""
+	}
+
+	var emails []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
+		log.Printf("Failed to decode GitHub emails: %v", err)
+		return ""
+	}
+
+	// Find the primary email
+	for _, emailData := range emails {
+		if primary, ok := emailData["primary"].(bool); ok && primary {
+			if email, ok := emailData["email"].(string); ok {
+				return email
+			}
+		}
+	}
+
+	// If no primary email, return the first verified email
+	for _, emailData := range emails {
+		if verified, ok := emailData["verified"].(bool); ok && verified {
+			if email, ok := emailData["email"].(string); ok {
+				return email
+			}
+		}
+	}
+
+	return ""
 }
 
 // Helper functions

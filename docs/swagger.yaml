@@ -21,6 +21,20 @@ definitions:
     required:
     - name
     type: object
+  models.CreateServiceRequest:
+    properties:
+      focus:
+        type: string
+      lang:
+        type: string
+      name:
+        type: string
+      project:
+        type: integer
+    required:
+    - name
+    - project
+    type: object
   models.Project:
     properties:
       created_at:
@@ -66,6 +80,17 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  models.UpdateServiceRequest:
+    properties:
+      focus:
+        type: string
+      lang:
+        type: string
+      name:
+        type: string
+      project:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -119,6 +144,20 @@ paths:
             additionalProperties: true
             type: object
       summary: Get login URL
+      tags:
+      - auth
+  /api/auth/status:
+    get:
+      description: Returns current authentication status and user info if authenticated
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication status
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Check authentication status
       tags:
       - auth
   /health:
@@ -410,6 +449,153 @@ paths:
           schema:
             $ref: '#/definitions/models.APIResponse'
       summary: Get all services
+      tags:
+      - services
+    post:
+      consumes:
+      - application/json
+      description: Create a new service with the provided data
+      parameters:
+      - description: Service data
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Service created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Service'
+              type: object
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Failed to create service
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Create new service
+      tags:
+      - services
+  /services/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a service by its ID
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service deleted successfully
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Invalid service ID
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Failed to delete service
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Delete service
+      tags:
+      - services
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific service by its ID
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Service'
+              type: object
+        "400":
+          description: Invalid service ID
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Failed to retrieve service
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Get service by ID
+      tags:
+      - services
+    put:
+      consumes:
+      - application/json
+      description: Update an existing service with the provided data
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated service data
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Service'
+              type: object
+        "400":
+          description: Invalid service ID or request body
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Failed to update service
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Update service
       tags:
       - services
 swagger: "2.0"

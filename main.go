@@ -137,7 +137,11 @@ func setupRouter(cfg *config.Config,
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router := gin.Default()
+	router := gin.New()
+
+	// Add middleware
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
 
 	// Session management
 	store := cookie.NewStore([]byte(cfg.OAuth2.SessionSecret))
@@ -158,10 +162,6 @@ func setupRouter(cfg *config.Config,
 		router.Use(corsMiddleware())
 	}
 
-	// Request logging middleware
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
-
 	// Serve static files
 	router.Use(static.Serve("/", static.LocalFile("./public/", true)))
 
@@ -181,6 +181,7 @@ func setupRouter(cfg *config.Config,
 			auth.POST("/logout", oauth2Handler.LogoutHandler())
 			auth.GET("/me", oauth2Handler.RequireAuth(), oauth2Handler.MeHandler())
 			auth.GET("/login-url", authController.GetLoginURL)
+			auth.GET("/status", oauth2Handler.OptionalAuth(), authController.GetAuthStatus)
 		}
 	}
 
@@ -195,11 +196,8 @@ func setupRouter(cfg *config.Config,
 		c.Next()
 	})
 
-	// Apply OAuth2 middleware if enabled and auth is required
-	if oauth2Handler != nil && cfg.API.EnableAuth {
-		api.Use(oauth2Handler.RequireAuth())
-	} else if oauth2Handler != nil {
-		// Optional auth - adds user info to context if available
+	// Optional auth - adds user info to context if available (for all routes)
+	if oauth2Handler != nil {
 		api.Use(oauth2Handler.OptionalAuth())
 	}
 
@@ -208,32 +206,60 @@ func setupRouter(cfg *config.Config,
 		api.GET("", apiController.GetAPIInfo)
 		api.GET("/", apiController.GetAPIInfo)
 
-		// Projects routes
+		// Projects routes - GET endpoints are always public
 		project := api.Group("/project")
 		{
+			// Public read-only endpoints
 			project.GET("", projectController.GetAllProjects)
 			project.GET("/stats", projectController.GetProjectsWithStats)
 			project.GET("/:id", projectController.GetProjectByID)
+			project.GET("/:id/services", projectController.GetServicesByProjectID)
+		}
 
-			// Protected routes (require auth if enabled)
-			if cfg.API.EnableAuth {
-				project.POST("", projectController.CreateProject)
-				project.PUT("/:id", projectController.UpdateProject)
-				project.DELETE("/:id", projectController.DeleteProject)
-			} else {
-				// If auth is disabled, all routes are public
+		// Projects write endpoints - require auth if enabled
+		if cfg.API.EnableAuth && oauth2Handler != nil {
+			projectProtected := api.Group("/project")
+			projectProtected.Use(oauth2Handler.RequireAuth())
+			{
+				projectProtected.POST("", projectController.CreateProject)
+				projectProtected.PUT("/:id", projectController.UpdateProject)
+				projectProtected.DELETE("/:id", projectController.DeleteProject)
+			}
+		} else {
+			// If auth is disabled, write routes are public
+			project := api.Group("/project")
+			{
 				project.POST("", projectController.CreateProject)
 				project.PUT("/:id", projectController.UpdateProject)
 				project.DELETE("/:id", projectController.DeleteProject)
 			}
-
-			project.GET("/:id/services", projectController.GetServicesByProjectID)
 		}
 
-		// Services routes
+		// Services routes - GET endpoints are always public
 		services := api.Group("/services")
 		{
+			// Public read-only endpoints
 			services.GET("", serviceController.GetAllServices)
+			services.GET("/:id", serviceController.GetServiceByID)
+		}
+
+		// Services write endpoints - require auth if enabled
+		if cfg.API.EnableAuth && oauth2Handler != nil {
+			servicesProtected := api.Group("/services")
+			servicesProtected.Use(oauth2Handler.RequireAuth())
+			{
+				servicesProtected.POST("", serviceController.CreateService)
+				servicesProtected.PUT("/:id", serviceController.UpdateService)
+				servicesProtected.DELETE("/:id", serviceController.DeleteService)
+			}
+		} else {
+			// If auth is disabled, write routes are public
+			services := api.Group("/services")
+			{
+				services.POST("", serviceController.CreateService)
+				services.PUT("/:id", serviceController.UpdateService)
+				services.DELETE("/:id", serviceController.DeleteService)
+			}
 		}
 	}
 

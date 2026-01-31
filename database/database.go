@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -36,9 +35,9 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 
 	log.Println("Database connected successfully")
 
-	// Initialize database tables
-	if err := initializeDatabase(db); err != nil {
-		log.Printf("Warning: Error initializing database: %v", err)
+	// Run migrations
+	if err := runMigrations(db); err != nil {
+		log.Printf("Warning: Error running migrations: %v", err)
 	}
 
 	return &DB{db}, nil
@@ -62,19 +61,14 @@ func (db *DB) GetDBStats() sql.DBStats {
 	return db.Stats()
 }
 
-// initializeDatabase runs the initial SQL schema
-func initializeDatabase(db *sql.DB) error {
-	sqlStmt, err := os.ReadFile("./db/init.sql")
-	if err != nil {
-		return fmt.Errorf("could not read init.sql: %v", err)
+// runMigrations runs all pending database migrations
+func runMigrations(db *sql.DB) error {
+	migrationsPath := "./db/migrations"
+
+	if err := RunMigrations(db, migrationsPath); err != nil {
+		return err
 	}
 
-	_, err = db.Exec(string(sqlStmt))
-	if err != nil {
-		return fmt.Errorf("error executing init.sql: %v", err)
-	}
-
-	log.Println("Database tables initialized successfully")
 	return nil
 }
 

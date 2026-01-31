@@ -35,6 +35,20 @@ type UpdateProjectRequest struct {
 	Status      *string `json:"status"`
 }
 
+type CreateServiceRequest struct {
+	Name    string  `json:"name" binding:"required"`
+	Lang    *string `json:"lang"`
+	Focus   *string `json:"focus"`
+	Project int     `json:"project" binding:"required"`
+}
+
+type UpdateServiceRequest struct {
+	Name    *string `json:"name"`
+	Lang    *string `json:"lang"`
+	Focus   *string `json:"focus"`
+	Project *int    `json:"project"`
+}
+
 type APIResponse struct {
 	Success bool        `json:"success"`
 	Message string      `json:"message"`

@@ -283,6 +283,132 @@ func (r *ServiceRepository) GetByProjectID(projectID int) ([]models.Service, err
 	return services, nil
 }
 
+// GetByID retrieves a service by its ID
+func (r *ServiceRepository) GetByID(id int) (*models.Service, error) {
+	query := `
+		SELECT id, name, lang, focus, project, created_at, updated_at 
+		FROM service 
+		WHERE id = $1
+	`
+	row := r.db.QueryRow(query, id)
+
+	var service models.Service
+	err := row.Scan(&service.ID, &service.Name, &service.Lang,
+		&service.Focus, &service.Project, &service.CreatedAt, &service.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("service not found")
+		}
+		return nil, fmt.Errorf("error querying service: %v", err)
+	}
+
+	return &service, nil
+}
+
+// Create creates a new service
+func (r *ServiceRepository) Create(req models.CreateServiceRequest) (*models.Service, error) {
+	query := `
+		INSERT INTO service (name, lang, focus, project, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, name, lang, focus, project, created_at, updated_at
+	`
+	now := time.Now()
+	row := r.db.QueryRow(query, req.Name, req.Lang, req.Focus, req.Project, now, now)
+
+	var service models.Service
+	err := row.Scan(&service.ID, &service.Name, &service.Lang,
+		&service.Focus, &service.Project, &service.CreatedAt, &service.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("error creating service: %v", err)
+	}
+
+	return &service, nil
+}
+
+// Update updates an existing service
+func (r *ServiceRepository) Update(id int, req models.UpdateServiceRequest) (*models.Service, error) {
+	// Check if service exists
+	_, err := r.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build dynamic update query based on provided fields
+	updateFields := "updated_at = $1"
+	args := []interface{}{time.Now()}
+	argIndex := 2
+
+	if req.Name != nil {
+		updateFields += fmt.Sprintf(", name = $%d", argIndex)
+		args = append(args, *req.Name)
+		argIndex++
+	}
+
+	if req.Lang != nil {
+		updateFields += fmt.Sprintf(", lang = $%d", argIndex)
+		args = append(args, *req.Lang)
+		argIndex++
+	}
+
+	if req.Focus != nil {
+		updateFields += fmt.Sprintf(", focus = $%d", argIndex)
+		args = append(args, *req.Focus)
+		argIndex++
+	}
+
+	if req.Project != nil {
+		updateFields += fmt.Sprintf(", project = $%d", argIndex)
+		args = append(args, *req.Project)
+		argIndex++
+	}
+
+	args = append(args, id)
+
+	query := fmt.Sprintf(`
+		UPDATE service 
+		SET %s
+		WHERE id = $%d
+		RETURNING id, name, lang, focus, project, created_at, updated_at
+	`, updateFields, argIndex)
+
+	row := r.db.QueryRow(query, args...)
+
+	var service models.Service
+	err = row.Scan(&service.ID, &service.Name, &service.Lang,
+		&service.Focus, &service.Project, &service.CreatedAt, &service.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("error updating service: %v", err)
+	}
+
+	return &service, nil
+}
+
+// Delete deletes a service by ID
+func (r *ServiceRepository) Delete(id int) error {
+	// Check if service exists
+	_, err := r.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	query := `DELETE FROM service WHERE id = $1`
+	result, err := r.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("error deleting service: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting affected rows: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("service not found")
+	}
+
+	return nil
+}
+
 // GetAll retrieves all services
 func (r *ServiceRepository) GetAll() ([]models.Service, error) {
 	query := `
